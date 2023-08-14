@@ -10,10 +10,11 @@ mod app {
     use bsp::hal::gpio::{self, Trigger};
     use teensy4_pins::common::*;
     use systick_monotonic::{fugit::Duration, Systick};
+    use imxrt_iomuxc::prelude::*;
 
     // define some associated types for loca struct definition
     type Led = gpio::Output<P13>;
-    type Button = gpio::Input<P9>;
+    type Button = gpio::Input<P16>;
 
     #[local]
     struct Local {
@@ -32,7 +33,10 @@ mod app {
     #[init]
     fn init(cx: init::Context) -> (Shared, Local, init::Monotonics) {
         let board::Resources {
-            pins,
+            mut pins,
+            // resource for pin 16 which is used for the button
+            mut gpio1,
+            // resource for pin 13, in this case, the on-board LED
             mut gpio2,
             usb,
             ..
@@ -44,10 +48,13 @@ mod app {
         // Init monotonic systick for delayed spawn
         let mono = Systick::new(cx.core.SYST, 36_000_000);
 
-        let led = gpio2.output(pins.p13);
-        let button = gpio2.input(pins.p9);
+        // configure pin 16 as an internal pull up
+        configure(&mut pins.p16, Config::zero().set_pull_keeper(Some(PullKeeper::Pullup22k)));
 
-        gpio2.set_interrupt(&button, Some(Trigger::FallingEdge));
+        let led = gpio2.output(pins.p13);
+        let button = gpio1.input(pins.p16);
+
+        gpio1.set_interrupt(&button, Some(Trigger::FallingEdge));
 
         // set led to off
         led.clear();
@@ -63,7 +70,7 @@ mod app {
         }
     }
 
-    #[task(binds = GPIO2_COMBINED_0_15, local = [led], shared = [pressed, button])]
+    #[task(binds = GPIO1_COMBINED_16_31, local = [led], shared = [pressed, button])]
     fn int_toggle(cx: int_toggle::Context) {
         // reference to shared resource
         let mut pressed = cx.shared.pressed;

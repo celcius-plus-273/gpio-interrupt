@@ -12,6 +12,7 @@ log = "0.4"
 cortex-m-rtic = "1.1.4"
 teensy4-pins = "0.3.1"
 systick-monotonic = "1.0.1"
+imxrt-iomuxc = "0.2.2"
 
 [dependencies.teensy4-panic]
 version = "0.2"

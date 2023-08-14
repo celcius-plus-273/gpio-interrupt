@@ -193,6 +193,7 @@ dependencies = [
  "cortex-m",
  "cortex-m-rtic",
  "embedded-hal",
+ "imxrt-iomuxc",
  "log",
  "systick-monotonic",
  "teensy4-bsp",
